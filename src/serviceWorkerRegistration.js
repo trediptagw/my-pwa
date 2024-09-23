@@ -10,6 +10,7 @@ const isLocalhost = Boolean(
 );
 
 export function register(config) {
+  // Ensure service workers are supported and only register in production
   if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
     const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
     if (publicUrl.origin !== window.location.origin) {
@@ -23,11 +24,11 @@ export function register(config) {
         checkValidServiceWorker(swUrl, config);
         navigator.serviceWorker.ready.then(() => {
           console.log(
-            "This web app is being served cache-first by a service " +
-              "worker. To learn more, visit https://cra.link/PWA"
+            "This web app is being served cache-first by a service worker. To learn more, visit https://cra.link/PWA"
           );
         });
       } else {
+        // Register service worker for production
         registerValidSW(swUrl, config);
       }
     });
@@ -47,8 +48,7 @@ function registerValidSW(swUrl, config) {
           if (installingWorker.state === "installed") {
             if (navigator.serviceWorker.controller) {
               console.log(
-                "New content is available and will be used when all " +
-                  "tabs for this page are closed. See https://cra.link/PWA."
+                "New content is available and will be used when all tabs for this page are closed."
               );
 
               if (config && config.onUpdate) {
@@ -64,6 +64,11 @@ function registerValidSW(swUrl, config) {
           }
         };
       };
+
+      // Handle notifications in service worker
+      navigator.serviceWorker.ready.then(() => {
+        showNotification();
+      });
     })
     .catch((error) => {
       console.error("Error during service worker registration:", error);
@@ -105,5 +110,25 @@ export function unregister() {
       .catch((error) => {
         console.error(error.message);
       });
+  }
+}
+
+// Function to show a notification
+function showNotification() {
+  if (Notification.permission === "granted") {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.showNotification("Hello from the PWA!", {
+        body: "This is a local notification without push subscription.",
+        icon: "/logo192.png",
+        vibrate: [100, 50, 100],
+        tag: "pwa-notification",
+      });
+    });
+  } else {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        showNotification(); // Show notification after permission is granted
+      }
+    });
   }
 }
